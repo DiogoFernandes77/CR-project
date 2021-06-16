@@ -59,7 +59,7 @@ typedef int bool;
 
 #define min(a, b)		((a < b) ? a : b)
 
-#define N				2048 // up to 4095
+#define N				4095 // up to 4095
 
 #define DMA_DEVICE_ID	XPAR_AXIDMA_0_DEVICE_ID
 
@@ -169,8 +169,6 @@ bool CheckPopulationCount(int* pData1, int* pData2, unsigned int size)
 			mask = mask << 1;
 		}
 	}
-	xil_printf("\n*pData2=%d\n", *pData2);
-	xil_printf("\n*sum=%d\n", sum);
 
 	return *pData2==sum;
 }
@@ -285,8 +283,7 @@ int main()
 	srand(0);
 	for (int i = 0; i < N; i++)
 	{
-//		srcData[i] = rand(); // TODO random seed source?
-		srcData[i] = i % 2; // For testing purposes
+		srcData[i] = rand(); // TODO random seed source?
 	}
 	timeElapsed = StopAndGetPerformanceTimer();
 	xil_printf("\n\rMemory initialization time: %d microseconds\n\r",
@@ -330,21 +327,20 @@ int main()
 		return XST_FAILURE;
 	}
 
-	*dstData = Xil_In32(XPAR_POPCOUNTCOP_0_S00_AXI_BASEADDR);
-
 	while (XAxiDma_Busy(&dmaInstDefs, XAXIDMA_DMA_TO_DEVICE))
 	{
 		/* Wait for the transfer of data from dma to copr has finished */
 	}
 
+	*dstData = Xil_In32(XPAR_POPCOUNTCOP_0_S00_AXI_BASEADDR);
+
 	timeElapsed = StopAndGetPerformanceTimer();
 	xil_printf("\n\rDMA Hardware assisted population count time: %d microseconds",
 			   timeElapsed / (XPAR_CPU_M_AXI_DP_FREQ_HZ / 1000000));
-	//
-	xil_printf("\n*dstData = %d\n", *dstData);
+
 	xil_printf("\n\rChecking result: %s\n\r",
 			   CheckPopulationCount(srcData, dstData, N) ? "OK" : "Error");
-	xil_printf("\n%d\n", *dstData);
+	xil_printf("\nHamming Distance: %d\n", *dstData);
 
 	cleanup_platform();
 	return XST_SUCCESS;
