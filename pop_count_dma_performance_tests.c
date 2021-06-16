@@ -59,7 +59,9 @@ typedef int bool;
 
 #define min(a, b)		((a < b) ? a : b)
 
-#define N				4095 // up to 4095
+						// (32768-1) x 32 bits = 64kB + 64kB
+						// Meaning we would need N=32767 for being able to compare two vectors of 64kB each
+#define N				4095
 
 #define DMA_DEVICE_ID	XPAR_AXIDMA_0_DEVICE_ID
 
@@ -189,7 +191,7 @@ void HammingDistanceSw(int* pDst, int* pSrc, unsigned int size)
 		// Xor upon the two operands
 		xor = ((~a) & b) | (a & (~b));
 		// Population count on xor
-		while(mask != 0x0) {// means that it hasn't yet lapped (0x8000_0000 << 1 == 0x0)
+		while(mask <= 0x8000) { // last value of mask is 1000 0000 0000 0000 (operands are 16 bit wide)
 			// += pSrcElem & mask
 			if ((xor & mask) != 0x0)// can be 0x1, 0x10, 0x100, ...
 				*pDst += 1;
@@ -213,7 +215,7 @@ bool CheckHammingDistance(int* pData1, int* pData2, unsigned int size)
 		// Xor upon the two operands
 		xor = ((~a) & b) | (a & (~b));
 		// Population count on xor
-		while(mask != 0x0) {
+		while(mask <= 0x8000) { // last value of mask is 1000 0000 0000 0000 (operands are 16 bit wide)
 			// += pSrcElem & mask
 			if ((xor & mask) != 0x0)
 				sum += 1;
@@ -272,10 +274,11 @@ int main()
 	int status;
 	XAxiDma dmaInstDefs;
 
-	int srcData[N], dstData[1];
+	// srcData elements have 32 bits: 16 from the first vector and 16 from the second one
+	int srcData[N], dstData;
 	unsigned int timeElapsed;
 
-	xil_printf("\r\nDMA with Population Count Demo Program - Entering main()...");
+	xil_printf("\r\nDMA with Hamming Distance Demo Program - Entering main()...");
 	init_platform();
 
 	xil_printf("\r\nFilling memory with pseudo-random data...");
@@ -283,7 +286,7 @@ int main()
 	srand(0);
 	for (int i = 0; i < N; i++)
 	{
-		srcData[i] = rand(); // TODO random seed source?
+		srcData[i] = rand(); // TODO set random seed source (maybe current time?)
 	}
 	timeElapsed = StopAndGetPerformanceTimer();
 	xil_printf("\n\rMemory initialization time: %d microseconds\n\r",
@@ -293,13 +296,13 @@ int main()
 
 	// Software only
 	RestartPerformanceTimer();
-	PopulationCountSw(dstData, srcData, N);
+	HammingDistanceSw(dstData, srcData, N);
 	timeElapsed = StopAndGetPerformanceTimer();
-	xil_printf("\n\rSoftware only reverse endianness time: %d microseconds",
+	xil_printf("\n\rSoftware only hamming distance time: %d microseconds",
 			   timeElapsed / (XPAR_CPU_M_AXI_DP_FREQ_HZ / 1000000));
 	PrintDataArray(dstData, min(8, N));
 	xil_printf("\n\rChecking result: %s\n\r",
-			   CheckPopulationCount(srcData, dstData, N) ? "OK" : "Error");
+			   CheckHammingDistance(srcData, dstData, N) ? "OK" : "Error");
 
 	xil_printf("\r\nConfiguring DMA...");
 	status = DMAConfig(DMA_DEVICE_ID, &dmaInstDefs);
@@ -316,7 +319,7 @@ int main()
 	RestartPerformanceTimer();
 
 	// Initialize hw copr value at 0
-	Xil_Out32(XPAR_POPCOUNTCOP_0_S00_AXI_BASEADDR, 0x0);
+	Xil_Out32(XPAR_POPCOUNTCOP_0_S00_AXI_BASEADDR, 0x0); // TODO change to correct macro
 
 	status = XAxiDma_SimpleTransfer(&dmaInstDefs,(UINTPTR) srcData, N * sizeof(int), XAXIDMA_DMA_TO_DEVICE);
 	if (status == XST_INVALID_PARAM)
@@ -332,15 +335,18 @@ int main()
 		/* Wait for the transfer of data from dma to copr has finished */
 	}
 
-	*dstData = Xil_In32(XPAR_POPCOUNTCOP_0_S00_AXI_BASEADDR);
+	*dstData = Xil_In32(XPAR_POPCOUNTCOP_0_S00_AXI_BASEADDR); // TODO Change to correct macro
 
 	timeElapsed = StopAndGetPerformanceTimer();
-	xil_printf("\n\rDMA Hardware assisted population count time: %d microseconds",
+	xil_printf("\n\rDMA Hardware assisted hamming distance time: %d microseconds",
 			   timeElapsed / (XPAR_CPU_M_AXI_DP_FREQ_HZ / 1000000));
 
 	xil_printf("\n\rChecking result: %s\n\r",
-			   CheckPopulationCount(srcData, dstData, N) ? "OK" : "Error");
+			   CheckHammingDistance(srcData, dstData, N) ? "OK" : "Error");
 	xil_printf("\nHamming Distance: %d\n", *dstData);
+
+	// TODO send result to nexys display driver
+	// ...
 
 	cleanup_platform();
 	return XST_SUCCESS;
