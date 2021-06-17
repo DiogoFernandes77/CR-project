@@ -1,0 +1,37 @@
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2020.2 (win64) Build 3064766 Wed Nov 18 09:12:45 MST 2020
+| Date         : Thu Jun 17 18:16:15 2021
+| Host         : LAPTOP-H91N0ESU running 64-bit major release  (build 9200)
+| Command      : upgrade_ip
+| Device       : xc7a100tcsg324-1
+------------------------------------------------------------------------------------
+
+Upgrade Log for IP 'mb_design_1_HamDistPop_0_0'
+
+1. Summary
+----------
+
+SUCCESS in the upgrade of mb_design_1_HamDistPop_0_0 (xilinx.com:user:HamDistPop:1.0) from (Rev. 2) to (Rev. 3)
+
+
+
+
+
+
+Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2020.2 (win64) Build 3064766 Wed Nov 18 09:12:45 MST 2020
+| Date         : Thu Jun 17 18:13:32 2021
+| Host         : LAPTOP-H91N0ESU running 64-bit major release  (build 9200)
+| Command      : upgrade_ip
+| Device       : xc7a100tcsg324-1
+------------------------------------------------------------------------------------
+
+Upgrade Log for IP 'mb_design_1_HamDistPop_0_0'
+
+1. Summary
+----------
+
+SUCCESS in the conversion of mb_design_1_HamDistPop_0_0 (xilinx.com:user:HamDistPop:1.0 (Rev. 2)) to Vivado generation flows.
+
